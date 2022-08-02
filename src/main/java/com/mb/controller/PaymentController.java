@@ -1,5 +1,7 @@
 package com.mb.controller;
 
+import static com.mb.constant.UrlConstants.CHECKOUT;
+import static com.mb.constant.UrlConstants.WEBHOOK;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -7,14 +9,18 @@ import java.util.Map;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
-import com.mb.entity.PaymentInfo;
+import com.mb.entity.Payment;
+import com.mb.exception.CustomException;
 import com.mb.repository.ProductRepository;
-import com.mb.service.PaymentInfoService;
+import com.mb.response.SuccResponse;
+import com.mb.service.PaymentService;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Charge;
@@ -25,7 +31,6 @@ import com.stripe.model.checkout.Session;
 import com.stripe.net.Webhook;
 
 @RestController
-
 public class PaymentController
 {
 	@Value("${Stripe.apiKey}")
@@ -38,20 +43,20 @@ public class PaymentController
 	ProductRepository productRepo;
 
 	@Autowired
-	PaymentInfoService paymentInfoService;
+	PaymentService paymentService;
 
 	@Autowired
 	private ModelMapper mapper;
 
 	@CrossOrigin(origins = {"http://localhost:3000"})
-	@PostMapping("/checkout")
-	public Session checkout(@RequestBody int q) throws StripeException
+	@PostMapping(CHECKOUT)
+	public Session checkout(@RequestBody int quantity) throws StripeException
 	{
 
-		int finalAmount = 299 * 100;
+		int finalAmount = 299 * 100;// conversion
 		List<Object> lineItems = new ArrayList<>();
 		Map<String, Object> lineItem1 = new HashMap<>();
-		lineItem1.put("quantity", q);
+		lineItem1.put("quantity", quantity);
 		lineItem1.put("name", "Abhishek");
 		lineItem1.put("amount", finalAmount);
 		lineItem1.put("currency", "inr");
@@ -63,6 +68,7 @@ public class PaymentController
 		params.put(
 				"cancel_url",
 				"http://localhost:3000/cancle");
+		// params.put("addimage", "https://m.media-amazon.com/images/I/81kUhm40nQL._SX569_.jpg");
 		params.put("line_items", lineItems);
 		params.put("mode", "payment");
 
@@ -71,11 +77,11 @@ public class PaymentController
 		return session;
 	}
 
-	@PostMapping("/stripe/events")
-	public String handleStripeEvent(@RequestBody String payload, @RequestHeader("Stripe-Signature") String sigHeader)
+	@PostMapping(WEBHOOK)
+	public ResponseEntity<SuccResponse> handleStripeEvent(@RequestBody String payload, @RequestHeader("Stripe-Signature") String sigHeader)
 	{
 
-		Event event;
+		Event event = null;
 
 		try
 		{
@@ -85,12 +91,7 @@ public class PaymentController
 		catch (SignatureVerificationException e)
 		{
 			// Invalid signature
-			return "";
-		}
 
-		if (sigHeader == null)
-		{
-			return "";
 		}
 
 		if (endpointSecret != null && sigHeader != null)
@@ -121,13 +122,22 @@ public class PaymentController
 
 				long subtotal = total / 100;
 
-				PaymentInfo paymentInfoDto = new PaymentInfo(name, email, (int) subtotal);
-				paymentInfoService.Save(paymentInfoDto);
-				System.out.println(paymentInfoDto);
+				Payment payment = new Payment(name, email, (int) subtotal);
+				paymentService.Save(payment);
+
+				SuccResponse response = SuccResponse.getInstance();
+				response.setMessage("Success");
+				response.setStatusCode(HttpStatus.OK.value());
+				return new ResponseEntity<SuccResponse>(response, HttpStatus.OK);
 
 			}
+			else
+			{
+				throw new CustomException("Error");
+			}
 		}
-		return "";
+		return null;
+
 	}
 
 }

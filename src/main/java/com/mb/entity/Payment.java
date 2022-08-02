@@ -8,7 +8,7 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "PaymentInfo")
-public class PaymentInfo
+public class Payment
 {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -20,7 +20,7 @@ public class PaymentInfo
 
 	private int amount;
 
-	public PaymentInfo(String name, String email, int amount)
+	public Payment(String name, String email, int amount)
 	{
 		super();
 		this.name = name;
