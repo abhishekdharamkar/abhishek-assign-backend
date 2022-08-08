@@ -1,5 +1,6 @@
 package com.mb.controller;
 
+import static com.mb.constant.UrlConstants.BASE_URL;
 import static com.mb.constant.UrlConstants.PRODUCT;
 import static com.mb.constant.UrlConstants.PRODUCTS;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,12 +10,13 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.mb.entity.Product;
 import com.mb.service.ProductService;;
 
 @RestController
-
+@RequestMapping(BASE_URL)
 public class ProductController
 {
 

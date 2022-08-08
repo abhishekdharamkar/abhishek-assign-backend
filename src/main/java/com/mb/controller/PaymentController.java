@@ -1,12 +1,8 @@
 package com.mb.controller;
 
+import static com.mb.constant.UrlConstants.BASE_URL;
 import static com.mb.constant.UrlConstants.CHECKOUT;
 import static com.mb.constant.UrlConstants.WEBHOOK;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -15,7 +11,9 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.mb.dto.PlaceOrdersDto;
 import com.mb.entity.Payment;
 import com.mb.exception.CustomException;
 import com.mb.repository.ProductRepository;
@@ -27,10 +25,10 @@ import com.stripe.model.Charge;
 import com.stripe.model.Event;
 import com.stripe.model.EventDataObjectDeserializer;
 import com.stripe.model.StripeObject;
-import com.stripe.model.checkout.Session;
 import com.stripe.net.Webhook;
 
 @RestController
+@RequestMapping(BASE_URL)
 public class PaymentController
 {
 	@Value("${Stripe.apiKey}")
@@ -45,36 +43,11 @@ public class PaymentController
 	@Autowired
 	PaymentService paymentService;
 
-	@Autowired
-	private ModelMapper mapper;
-
 	@CrossOrigin(origins = {"http://localhost:3000"})
 	@PostMapping(CHECKOUT)
-	public Session checkout(@RequestBody int quantity) throws StripeException
+	public String checkout(@RequestBody PlaceOrdersDto placeOrdersDto) throws StripeException
 	{
-
-		int finalAmount = 299 * 100;// conversion
-		List<Object> lineItems = new ArrayList<>();
-		Map<String, Object> lineItem1 = new HashMap<>();
-		lineItem1.put("quantity", quantity);
-		lineItem1.put("name", "Abhishek");
-		lineItem1.put("amount", finalAmount);
-		lineItem1.put("currency", "inr");
-		lineItems.add(lineItem1);
-		Map<String, Object> params = new HashMap<>();
-		params.put(
-				"success_url",
-				"http://localhost:3000/success");
-		params.put(
-				"cancel_url",
-				"http://localhost:3000/cancle");
-		// params.put("addimage", "https://m.media-amazon.com/images/I/81kUhm40nQL._SX569_.jpg");
-		params.put("line_items", lineItems);
-		params.put("mode", "payment");
-
-		Session session = Session.create(params);
-
-		return session;
+		return paymentService.PlaceOrder(placeOrdersDto);
 	}
 
 	@PostMapping(WEBHOOK)

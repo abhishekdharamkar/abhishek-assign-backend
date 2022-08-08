@@ -7,6 +7,7 @@ public class UrlConstants
 		throw new IllegalStateException("Constants class.can't instatiate");
 	}
 
+	public static final String BASE_URL = "/api";
 	public static final String CHECKOUT = "/checkout";
 	public static final String WEBHOOK = "/stripe/events";
 
