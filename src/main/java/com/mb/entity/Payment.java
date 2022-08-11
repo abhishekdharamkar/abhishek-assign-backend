@@ -13,7 +13,9 @@ public class Payment
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
-
+	// trans ID
+	// C Id
+	// redux
 	private String name;
 
 	private String email;
